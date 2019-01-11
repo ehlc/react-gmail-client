@@ -36,8 +36,6 @@ Features:
 
   
 
-Setup instructions and list of covered features coming soon.
-
 TODO Features:
 
 - [ ] Caching / memoizing fetched data (important due to [Gmail API Usage Limits](https://developers.google.com/gmail/api/v1/reference/quota))
