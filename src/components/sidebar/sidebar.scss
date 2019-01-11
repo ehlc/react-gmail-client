@@ -1,0 +1,57 @@
+.left-panel {
+  background-color: #f0f3f4;
+  border-width: 0px 1px 1px 0px;
+  border-color: #d9dfe2;
+  .sidebar {
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 0;
+
+    .nav-title {
+      text-transform: uppercase;
+      font-size: 0.833335rem;
+      color: #929ba1;
+      padding: 12px 0 6px 0;
+      font-weight: 600;
+      user-select: none;
+    }
+
+    li:not(.nav-title) {
+      list-style-type: none;
+      cursor: pointer;
+      font-weight: 600;
+
+      flex-shrink: 0;
+
+      position: relative;
+
+      border-radius: 0px 15px 15px 0px;
+
+      width: 95%;
+
+      user-select: none;
+
+      > .msg-count {
+        position: absolute;
+        right: 5px;
+        top: 5px;
+        background-color: #e9ecef;
+        padding: 2px 8px;
+        color: #000;
+        border-radius: 11px;
+        font-size: 0.833335rem;
+        padding: 2px 8px 3px 8px;
+      }
+
+      > svg {
+        margin-right: 1rem;
+      }
+      &:not(.selected):not(.nav-title):hover {
+        background-color: #fafafa !important;
+      }
+      &.selected {
+        background-color: #d9dfe3;
+      }
+    }
+  }
+}

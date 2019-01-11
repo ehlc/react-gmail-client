@@ -1,0 +1,10 @@
+.message-toolbar {
+  height: 50px;
+  .action-btns {
+    width: 98%;
+    .action-btn {
+      cursor: pointer;
+      display: inline-block;
+    }
+  }
+}

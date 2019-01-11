@@ -1,0 +1,12 @@
+.message-content {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50px;
+  bottom: 10px;
+  > iframe {
+    width: 98%;
+    height: 98%;
+    border: 0;
+  }
+}

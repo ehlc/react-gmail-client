@@ -1,0 +1,27 @@
+.header {
+  border-bottom: 1px solid #d9dfe2;
+  background-color: #6c757d;
+  color: #fff;
+  .header-logo {
+    display: flex;
+    flex: 1 1;
+    font-weight: 600;
+    a {
+      color: #FFF;
+      text-decoration: none;
+    }
+  }
+
+  .header-search {
+    display: flex;
+    flex: 5 1;
+    .user-name {
+      cursor: default;
+      user-select: none;
+    }
+    .profile-pic {
+      height: 28px;
+      width: auto;
+    }
+  }
+}
