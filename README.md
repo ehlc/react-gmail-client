@@ -50,7 +50,7 @@ TODO Features:
 
 - [ ] Add message forwarding functionality
 
-- [ ] Add message search functionality
+- [x] Add message search functionality
 
 - [ ] Add hover action buttons for each message in list view
 
