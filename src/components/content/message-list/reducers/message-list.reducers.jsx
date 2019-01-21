@@ -10,7 +10,8 @@ import {
   SET_PAGE_TOKENS,
   ADD_INITIAL_PAGE_TOKEN,
   CLEAR_PAGE_TOKENS,
-  MODIFY_MESSAGES_SUCCESS
+  MODIFY_MESSAGES_SUCCESS,
+  SET_SEARCH_QUERY
 } from "../actions/message-list.actions";
 
 const defaultMessagesState = {
@@ -127,3 +128,12 @@ export const emailMessageResult = (
       return state;
   }
 };
+
+export const searchQuery = (state = "", action) => {
+  switch(action.type) {
+    case SET_SEARCH_QUERY:
+      return action.payload
+    default:
+      return state;
+  }
+}

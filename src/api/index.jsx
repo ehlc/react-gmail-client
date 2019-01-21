@@ -34,9 +34,9 @@ export const getLabelList = () =>
       });
   });
 
-export const getMessageList = ({ labelIds, maxResults, pageToken }) =>
+export const getMessageList = ({ labelIds, maxResults, q, pageToken }) =>
   new Promise((resolve, reject) => {
-    getMessageRawList({ labelIds, maxResults, pageToken })
+    getMessageRawList({ labelIds, maxResults, pageToken, q })
       .then(getMessageHeaders)
       .then(messageResult =>
         flattenMessagesWithLabel(messageResult.messages, labelIds).then(
@@ -54,6 +54,19 @@ export const getMessageList = ({ labelIds, maxResults, pageToken }) =>
 
 export const flattenMessagesWithLabel = (messages, labelIds) =>
   new Promise((resolve, reject) => {
+
+    if (!labelIds) {
+      resolve({
+        messages,
+        label: {
+          result: {
+            messagesTotal: 0
+          }
+        }
+      });
+      return;
+    }
+
     window.gapi.client.gmail.users.labels
       .get({
         userId: "me",
@@ -74,7 +87,7 @@ const getMessageRawList = ({ labelIds, maxResults, pageToken, q = "" }) =>
         userId: "me",
         q,
         maxResults: maxResults || MAX_RESULTS,
-        labelIds: labelIds,
+        ...(labelIds && {labelIds}),
         ...(pageToken && { pageToken })
       })
       .then(response => resolve(response))

@@ -32,7 +32,6 @@ export class MessageList extends PureComponent {
   }
 
   componentDidMount() {
-    const query = "";
     const searchParam = this.props.location.search;
     const token = searchParam.indexOf("?") === 0 ? searchParam.slice(1) : null;
 
@@ -40,9 +39,10 @@ export class MessageList extends PureComponent {
       this.props.addInitialPageToken(token);
     }
 
+    const labelIds = this.props.searchQuery === "" ? [this.props.parentLabel.id] : undefined;
+
     this.props.getLabelMessages({
-      labelIds: [this.props.parentLabel.id],
-      q: query,
+      ...labelIds && {labelIds},
       pageToken: token
     });
   }
@@ -51,10 +51,11 @@ export class MessageList extends PureComponent {
     if (prevProps.location.search !== this.props.location.search) {
       const searchParam = this.props.location.search;
       const token = searchParam.indexOf("?") === 0 ? searchParam.slice(1) : null;
-      const query = "";
+
+      const labelIds = this.props.searchQuery === "" ? [this.props.parentLabel.id] : undefined;
+
       this.props.getLabelMessages({
-        labelIds: [this.props.parentLabel.id],
-        q: query,
+        ...labelIds && {labelIds},
         pageToken: token
       });
     }

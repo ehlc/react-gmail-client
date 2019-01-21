@@ -3,7 +3,7 @@ import { signedOutReducer } from "./gapi.reducers";
 import { signInStatusResult } from "./gapi.reducers";
 
 import { labelsResult } from "../components/sidebar/sidebar.reducers";
-import { messagesResult, emailMessageResult, pageTokens } from "../components/content/message-list/reducers/message-list.reducers";
+import { messagesResult, emailMessageResult, pageTokens, searchQuery } from "../components/content/message-list/reducers/message-list.reducers";
 
 export default combineReducers({
   signedOutReducer,
@@ -11,5 +11,6 @@ export default combineReducers({
   labelsResult,
   messagesResult,
   emailMessageResult,
-  pageTokens
+  pageTokens,
+  searchQuery
 });

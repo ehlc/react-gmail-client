@@ -18,7 +18,8 @@ import {
   toggleSelected,
   setPageTokens,
   addInitialPageToken,
-  clearPageTokens
+  clearPageTokens,
+  setSearchQuery
 } from "../content/message-list/actions/message-list.actions";
 
 import {selectLabel} from '../sidebar/sidebar.actions';
@@ -31,10 +32,6 @@ import { faSpinner } from "@fortawesome/free-solid-svg-icons";
 export class Main extends Component {
   constructor(props) {
     super(props);
-
-    this.state = {
-      selectedFolder: "INBOX"
-    };
 
     this.getLabelList = this.getLabelList.bind(this);
     this.getLabelMessages = this.getLabelMessages.bind(this);
@@ -65,7 +62,7 @@ export class Main extends Component {
     const selectedLabel = labels.find(el => el.selected);
     const labelPathMatch = labels.find(el => el.id.toLowerCase() === pathname.slice(1));
     if (!selectedLabel) {
-      if (labelPathMatch) {
+      if (labelPathMatch && this.props.searchQuery === "") {
         this.props.selectLabel(labelPathMatch.id);
       }      
     }
@@ -77,15 +74,11 @@ export class Main extends Component {
   }
 
   navigateToNextPage(token) {
-
     const searchParam = this.props.location.search;
-
-    let currentToken = searchParam.indexOf("?") === 0 ? searchParam.slice(1) : "";
-
+    const currentToken = searchParam.indexOf("?") === 0 ? searchParam.slice(1) : "";
     this.props.setPageTokens({
       prevPageToken: currentToken
     });
-
     this.props.history.push(token);
   }
 
@@ -94,9 +87,22 @@ export class Main extends Component {
   }
 
   loadLabelMessages(label) {
+    const currentSearchQuery = this.props.searchQuery;
     this.props.clearPageTokens();
-    this.props.selectLabel(label.id);
-    this.props.history.push(`/${label.id.toLowerCase()}`);
+    this.props.selectLabel(label.id);    
+
+    const newPathToPush = `/${label.id.toLowerCase()}`;
+
+    if (currentSearchQuery && currentSearchQuery !== "") {
+      this.props.setSearchQuery("");
+      const {pathname} = this.props.location;
+      if (newPathToPush === pathname) {
+        this.getLabelMessages({labelIds: [label.id] })
+      }
+    }
+    else {
+      this.props.history.push(`/${label.id.toLowerCase()}`);
+    }    
   }
   
 
@@ -133,6 +139,7 @@ export class Main extends Component {
               pageTokens={this.props.pageTokens}
               addInitialPageToken={this.addInitialPageToken}
               parentLabel={that.props.labelsResult.labels.find(el => el.id === props.match.path.slice(1) )}
+              searchQuery={this.props.searchQuery}
             />
           )
         }}
@@ -164,16 +171,21 @@ export class Main extends Component {
 
     return (
       <Fragment>
-        <Header googleUser={this.props.googleUser} onSignout={this.onSignout} />
+        <Header googleUser={this.props.googleUser} 
+          onSignout={this.onSignout} 
+          setSearchQuery={this.props.setSearchQuery}
+          getLabelMessages={this.getLabelMessages} 
+          searchQuery={this.props.searchQuery}
+        />
         <section className="main hbox space-between">
           <Sidebar
-            getLabelList={this.getLabelList}           
+            getLabelList={this.getLabelList}
             pathname={this.props.location.pathname}
             labelsResult={this.props.labelsResult}
             onLabelClick={this.loadLabelMessages}
           />
-          <article className="d-flex flex-column position-relative">            
-            <Switch>              
+          <article className="d-flex flex-column position-relative">
+            <Switch>
               {this.renderLabelRoutes()}
               <Route
                 exact
@@ -185,7 +197,7 @@ export class Main extends Component {
                 path="/:id([a-zA-Z0-9]+)"
                 component={MessageContent}
               />
-            </Switch>            
+            </Switch>
           </article>
         </section>
       </Fragment>
@@ -200,7 +212,8 @@ export class Main extends Component {
 const mapStateToProps = state => ({
   labelsResult: state.labelsResult,
   messagesResult: state.messagesResult,
-  pageTokens: state.pageTokens
+  pageTokens: state.pageTokens,
+  searchQuery: state.searchQuery
 });
 
 const mapDispatchToProps = dispatch =>
@@ -213,7 +226,8 @@ const mapDispatchToProps = dispatch =>
       selectLabel,
       setPageTokens,
       addInitialPageToken,
-      clearPageTokens
+      clearPageTokens,
+      setSearchQuery
     },
     dispatch
   );

@@ -1,6 +1,7 @@
 import { getMessageList } from "../../../../api";
 import { getMessage } from "../../../../api";
 import { batchModify } from "../../../../api";
+import { selectLabel } from "../../../sidebar/sidebar.actions";
 
 export const GET_MESSAGES = "GET_MESSAGES";
 export const GET_MESSAGES_LOAD_IN_PROGRESS = "GET_MESSAGES_LOAD_IN_PROGRESS";
@@ -15,14 +16,23 @@ export const ADD_INITIAL_PAGE_TOKEN = "ADD_INITIAL_PAGE_TOKEN";
 export const CLEAR_PAGE_TOKENS = "CLEAR_PAGE_TOKENS";
 export const MODIFY_MESSAGES_SUCCESS = "MODIFY_MESSAGES_SUCCESS";
 export const MODIFY_MESSAGES_FAILED = "MODIFY_MESSAGES_FAILED";
+export const SET_SEARCH_QUERY = "SET_SEARCH_QUERY";
 
 export const getLabelMessages = ({
-  labelIds = ["INBOX"],
+  labelIds,
   q = "",
   pageToken
-}) => dispatch => {
+}) => (dispatch, getState) => {
   dispatch(setMessageListLoadInProgress());
-  getMessageList({ labelIds, maxResults: 20, q, pageToken }).then(response => {
+
+  const state = getState();
+  const {searchQuery} = state;
+
+  if (searchQuery !== "") {
+    dispatch(selectLabel("-1"));
+  }
+
+  getMessageList({ labelIds, maxResults: 20, q: searchQuery, pageToken }).then(response => {
     dispatch({
       type: GET_MESSAGES,
       payload: response
@@ -39,6 +49,11 @@ export const getLabelMessages = ({
     })
   });
 };
+
+export const setSearchQuery = q => ({
+  type: SET_SEARCH_QUERY,
+  payload: q
+})
 
 export const setPageTokens = tokens => ({
   type: SET_PAGE_TOKENS,
