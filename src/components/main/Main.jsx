@@ -97,12 +97,12 @@ export class Main extends Component {
       this.props.setSearchQuery("");
       const {pathname} = this.props.location;
       if (newPathToPush === pathname) {
-        this.getLabelMessages({labelIds: [label.id] })
+        this.getLabelMessages({labelIds: [label.id] });
+        return;
       }
     }
-    else {
-      this.props.history.push(`/${label.id.toLowerCase()}`);
-    }    
+
+    this.props.history.push(`/${label.id.toLowerCase()}`);
   }
   
 
