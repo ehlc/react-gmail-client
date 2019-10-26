@@ -1,121 +1,86 @@
 import { MAX_RESULTS } from "../constants";
 import {getBody, isHTML} from './utils';
 
-const getLabelDetailPromise = labelId => {
-  return new Promise((resolve, reject) => {
-    window.gapi.client.gmail.users.labels
-      .get({
-        userId: "me",
-        id: labelId
-      })
-      .then(response => resolve(response));
-  });
-};
-
-const getLabelDetails = labelList => {
-  return new Promise((resolve, reject) => {
-    const labelPromises = labelList.result.labels.map(el => {
-      return getLabelDetailPromise(el.id);
+const getLabelDetailPromise = async (labelId) => {
+  return await window.gapi.client.gmail.users.labels.get({
+      userId: "me",
+      id: labelId
     });
-
-    Promise.all(labelPromises).then(response => resolve(response));
-  });
 };
 
-export const getLabelList = () =>
-  new Promise((resolve, reject) => {
-    window.gapi.client.gmail.users.labels
-      .list({
-        userId: "me"
-      })
-      .then(getLabelDetails)
-      .then(response => {
-        resolve(response.map(el => el.result));
-      });
+const getLabelDetails = async (labelList) => {
+  const labelPromises = labelList.result.labels.map(async (el) => {
+    return await getLabelDetailPromise(el.id);
   });
 
-export const getMessageList = ({ labelIds, maxResults, q, pageToken }) =>
-  new Promise((resolve, reject) => {
-    getMessageRawList({ labelIds, maxResults, pageToken, q })
-      .then(getMessageHeaders)
-      .then(messageResult =>
-        flattenMessagesWithLabel(messageResult.messages, labelIds).then(
-          labelMessagesDetails => resolve({
-            ...messageResult,
-            messages: labelMessagesDetails.messages,
-            label: labelMessagesDetails.label
-          })
-        )
-      )
-      .catch(err => {
-        reject(err);
-      });
-  });
+  return Promise.all(labelPromises);
+};
 
-export const flattenMessagesWithLabel = (messages, labelIds) =>
-  new Promise((resolve, reject) => {
+export const getLabelList = async () => {
+  const labelIds = await window.gapi.client.gmail.users.labels.list({userId: "me"});
+  const labelDetails = await getLabelDetails(labelIds);
+  return labelDetails.map(el => el.result);
+}
 
-    if (!labelIds) {
-      resolve({
-        messages,
-        label: {
-          result: {
-            messagesTotal: 0
-          }
+export const getMessageList = async ({ labelIds, maxResults, q, pageToken }) => {
+  const rawList = await getMessageRawList({ labelIds, maxResults, pageToken, q });
+  const messageHeaders = await getMessageHeaders(rawList);
+  const flattenedMessages = await flattenMessagesWithLabel(messageHeaders.messages, labelIds);
+  return {
+    ...messageHeaders,
+    messages: flattenedMessages.messages,
+    label: flattenedMessages.label
+  };
+}
+
+export const flattenMessagesWithLabel = async (messages, labelIds) => {
+  if (!labelIds) {
+    return {
+      messages,
+      label: {
+        result: {
+          messagesTotal: 0
         }
-      });
-      return;
-    }
+      }
+    };
+  }
 
-    window.gapi.client.gmail.users.labels
-      .get({
-        userId: "me",
-        id: labelIds[0]
-      })
-      .then(response =>
-        resolve({
-          messages,
-          label: response
-        })
-      );
-  });
+  const labels = await window.gapi.client.gmail.users.labels.get({userId: "me", id: labelIds[0]});
+  
+  return {
+    messages,
+    label: labels
+  };
+}
 
-const getMessageRawList = ({ labelIds, maxResults, pageToken, q = "" }) =>
-  new Promise((resolve, reject) => {
-    window.gapi.client.gmail.users.messages
-      .list({
-        userId: "me",
-        q,
-        maxResults: maxResults || MAX_RESULTS,
-        ...(labelIds && {labelIds}),
-        ...(pageToken && { pageToken })
-      })
-      .then(response => resolve(response))
-      .catch(err => {
-        reject(err);
-      });
-  });
-
-const getMessageHeaders = response => {
-  const messageResult = response.result;
-
-  return new Promise((resolve, reject) => {
-    const headerPromises = (messageResult.messages || []).map(el => {
-      return getMessageHeader(el.id);
+const getMessageRawList = async ({ labelIds, maxResults, pageToken, q = "" }) => {
+  return await window.gapi.client.gmail.users.messages
+    .list({
+      userId: "me",
+      q,
+      maxResults: maxResults || MAX_RESULTS,
+      ...(labelIds && {labelIds}),
+      ...(pageToken && { pageToken })
     });
+}
+ 
+const getMessageHeaders = async (messageRawList) => {
+  const messageResult = messageRawList.result;
 
-    Promise.all(headerPromises).then(messages =>
-      resolve({
-        ...messageResult,
-        messages
-      })
-    );
+  const headerPromises = (messageResult.messages || []).map(async (el) => {
+    return await getMessageHeader(el.id);
   });
+
+  const messages = await Promise.all(headerPromises);
+
+  return {
+    ...messageResult,
+    messages
+  };  
 };
 
-const getMessageHeader = id => {
-  return new Promise((resolve, reject) => {
-    window.gapi.client.gmail.users.messages
+const getMessageHeader = async (id) => {
+    const messages = await window.gapi.client.gmail.users.messages
       .get({
         userId: "me",
         id: id,
@@ -135,44 +100,36 @@ const getMessageHeader = id => {
           // See https://www.iana.org/assignments/message-headers/message-headers.xhtml
           // for more headers
         ]
-      })
-      .then(response => resolve(response.result));
-  });
+      });
+      return messages.result;
 };
 
-
-export const getMessage = messageId => {
-  return new Promise((resolve, reject) => {
-    window.gapi.client.gmail.users.messages
-      .get({
-        userId: "me",
-        id: messageId,
-        format: "full"
-      })
-      .then(response => {
-        const { result } = response;
-
-        let body = getBody(result.payload, "text/html");        
-
-        if (body === "") {
-          body = getBody(result.payload, "text/plain");
-          body = body.replace(/(\r\n)+/g, '<br data-break="rn-1">').replace(/[\n\r]+/g, '<br data-break="nr">');
-        }
-
-        if (body !== "" && !isHTML(body)) {
-          body = body.replace(/(\r\n)+/g, '<div data-break="rn-1" style="margin-bottom:10px"></div>').replace(/[\n\r]+/g, '<br data-break="nr">');
-        }
-          
-        resolve({
-          body,
-          headers: response.headers,
-          result: { ...result, messageHeaders: response.result.payload.headers, payload: undefined }
-        });
-      })
-      .catch(error => {
-        reject(error);
-      });
+export const getMessage = async(messageId) => {  
+  const response = await window.gapi.client.gmail.users.messages
+  .get({
+    userId: "me",
+    id: messageId,
+    format: "full"
   });
+
+  const { result } = response;
+
+  let body = getBody(result.payload, "text/html");        
+
+  if (body === "") {
+    body = getBody(result.payload, "text/plain");
+    body = body.replace(/(\r\n)+/g, '<br data-break="rn-1">').replace(/[\n\r]+/g, '<br data-break="nr">');
+  }
+
+  if (body !== "" && !isHTML(body)) {
+    body = body.replace(/(\r\n)+/g, '<div data-break="rn-1" style="margin-bottom:10px"></div>').replace(/[\n\r]+/g, '<br data-break="nr">');
+  }
+    
+  return {
+    body,
+    headers: response.headers,
+    result: { ...result, messageHeaders: response.result.payload.headers, payload: undefined }
+  };
 };
 
 export const sendMessage = ({ headers, body }) => {
@@ -197,17 +154,14 @@ export const sendMessage = ({ headers, body }) => {
   });
 };
 
-export const batchModify = ({ids, addLabelIds = [], removeLabelIds = []}) => new Promise((resolve, reject) => {
-  window.gapi.client.gmail.users.messages
+export const batchModify = async ({ids, addLabelIds = [], removeLabelIds = []}) => {
+  const batchModifyResult = await window.gapi.client.gmail.users.messages
     .batchModify({
       userId: "me",
       ids,
       addLabelIds,
       removeLabelIds
-    })
-    .then(response =>
-      {
-        resolve(ids)
-      }
-    );
-});
+    });
+
+    return ids;
+}
