@@ -50,6 +50,10 @@ export class MessageToolbar extends PureComponent {
       }
     }
 
+    if (replyTo.value === '') {
+      replyTo = messageHeaders.find(e => e.name === "From");
+    }
+
     const nameEmail = getNameEmail(replyTo.value);
     const receivedHeader = messageHeaders.find(el => el.name === "X-Received");
     const date = receivedHeader ? receivedHeader.value
