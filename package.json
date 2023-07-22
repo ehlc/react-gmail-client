@@ -8,7 +8,6 @@
     "@fortawesome/react-fontawesome": "^0.1.5",
     "bootstrap": "^4.3.1",
     "moment": "^2.24.0",
-    "node-sass": "^4.9.4",
     "react": "^16.10.2",
     "react-dom": "^16.10.2",
     "react-google-button": "^0.5.3",
@@ -19,7 +18,8 @@
     "react-scripts": "3.2.0",
     "reactstrap": "^6.5.0",
     "redux": "^4.0.4",
-    "redux-thunk": "^2.3.0"
+    "redux-thunk": "^2.3.0",
+    "sass": "^1.64.1"
   },
   "scripts": {
     "start": "react-scripts start",
